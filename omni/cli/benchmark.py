@@ -1,10 +1,11 @@
 """cli commands related to benchmark infos and stats"""
 
-from typing_extensions import Annotated
-
 import typer
 from packaging.version import Version
+from typing_extensions import Annotated
+
 import omni.io.files
+from omni.io.comparison import file_difference_between_benchmark_versions
 
 cli = typer.Typer(add_completion=False)
 
@@ -47,6 +48,14 @@ def diff_benchmark(
             help="Path to benchmark yaml file or benchmark id.",
         ),
     ],
+    endpoint: Annotated[
+        str,
+        typer.Option(
+            "--endpoint",
+            "-e",
+            help="remote/object storage.",
+        ),
+    ],
     version1: Annotated[
         str,
         typer.Option(
@@ -66,7 +75,9 @@ def diff_benchmark(
 ):
     """Show differences between 2 benchmark versions."""
     typer.echo(
-        f"Found the following differences in {benchmark} for {version1} and {version2}."
+        file_difference_between_benchmark_versions(
+            benchmark, endpoint, version1, version2
+        )
     )
 
 
