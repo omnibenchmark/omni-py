@@ -22,66 +22,25 @@ HOME=op.expanduser("~")
 
 ## shell-based stuff, partly to be replaced by direct eb API calls -------------------------------------
 
-def check_lmod_status():
+def check_call(command, use_shell = False):
     try:
-        ret = subprocess.check_call(["module", "--version"])
-    except FileNotFoundError:
-        return("ERROR module not found")
-    return(ret)
+        ret = subprocess.run(command.split(' '), text = True, capture_output = True,
+                             check=True, shell = use_shell)
+        return(ret)
+    except Exception as e :
+        return(print("ERROR:", e))
+    
+def check_lmod_status():
+    return(check_call('type module', use_shell = True))
 
 def check_singularity_status():
-    try:
-        ret =subprocess.check_call(["singularity", "--version"])
-    except FileNotFoundError:
-        return("ERROR singularity not found")
-    return(ret)
+    return(check_call('singularity --version'))
 
 def check_easybuild_status():
-    try:
-        ret = subprocess.check_call(["eb", "--version"])
-    except FileNotFoundError:
-        return("ERROR easybuild not found")
-    return(ret)
+    return(check_call('eb --version'))
 
-# def install_lmod():
-#     print('not implemented')
-#     try:
-#         subprocess.call(["wget", "--help"])
-#     except FileNotFoundError:
-#         print("ERROR wget not found; please install it system-wise")
-#     try:
-#         subprocess.call(["make", "--help"])
-#     except FileNotFoundError:
-#         print("ERROR make (build tools) not found; please install them system-wise")    
-#     try:
-#         cmd = 'bash ./modules.sh'
-#         output = subprocess.check_output(
-#             cmd, stderr = subprocess.STDOUT, shell = True,
-#             universal_newlines = True)
-#     except subprocess.CalledProcessError as exc:
-#         return("ERROR lmod install failed:", exc.returncode, exc.output)
-#     else:
-#         return("LOG lmod install output: \n{}\n".format(output))
-
-# def export_lmod_env_vars(LMOD_VERS="8.7"):
-#     os.environ['PATH']= ':'.join([op.join(op.expanduser("~"), 'soft', 'lmod', LMOD_VERS, 'libexec'),
-#                                   os.environ['PATH']])
-#     os.system('/bin/bash -c "source %s"' % op.join(op.expanduser('~'), 'soft', 'lmod', LMOD_VERS, 'init', 'bash'))
-#     os.environ['LMOD_CMD'] =  op.join(op.expanduser('~'), 'soft', 'lmod', LMOD_VERS, 'libexec', 'lmod')
-
-# def export_lmod_env_vars(export_modules_script = op.join(op.dirname(__file__), 'utils', 'export_modules.sh')):
-#     cmd = 'bash ' + export_modules_script
-#     output = subprocess.run(
-#         cmd.split(' '), stderr = subprocess.STDOUT, shell = False,
-#         universal_newlines = True)
-
-# def export_lmod_env_vars():
-#     from omni.software import utils
-#     export_modules_script = op.join(str(utils.__path__[0]), 'export_modules.sh')
-#     cmd = 'bash ' + str(export_modules_script)
-#     output = subprocess.check_output(
-#         cmd, stderr = subprocess.STDOUT, shell = True,
-#         universal_newlines = True)
+def check_conda_status():
+    return(check_call('conda --version'))
     
 def generate_default_easybuild_config_arguments(workdir):
     modulepath = op.join(workdir, 'easybuild', 'modules', 'all')
@@ -261,3 +220,17 @@ def singularity_build(easyconfig, singularity_recipe):
         return("ERROR singularity build failed:", exc.returncode, exc.output)
     else:
         return("LOG singularity build output: \n{}\n".format(output))
+
+## untested,drafted 06 Aug 2024
+def singularity_push(sif, docker_username, docker_password, oras):
+    cmd = f"""singularity push --docker-username {docker_username} \
+                 --docker-password {docker_password} \
+                 {sif} \
+                 {oras}"""
+    try:
+        output = subprocess.run(cmd.split(' '), shell = False, text = True, capture_output = True,
+                             check = True)
+    except Exception as exc:
+        return("ERROR singularity build failed:", exc)
+    else:
+        return("DONE.")

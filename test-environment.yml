@@ -2,7 +2,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python == 3.12
   - conda-forge::python >=3.12
   - conda-forge::mamba >=1.5.8
   - conda-forge::lmod >= 8.7.25
