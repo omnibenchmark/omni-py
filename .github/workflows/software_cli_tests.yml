@@ -36,9 +36,9 @@ jobs:
     strategy:
       matrix:
         # os: [ubuntu-latest, macos-latest]
-        os: [macos-latest]
+        os: [macos-13, macos-12, macos-latest]
         test_group: [1, 2, 3]
-        py_ver: ["3.12"]
+        py_ver: ["3.10", "3.11", "3.12"]
       fail-fast: false
       
     runs-on: ${{ matrix.os }}
