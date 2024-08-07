@@ -18,7 +18,7 @@
 ## GPLv2
 ## License available at https://github.com/easybuilders/easybuild-easyconfigs/blob/develop/LICENSE
 
-name: software_cli
+name: software_eb_singularity
 
 on:
   push:
@@ -40,30 +40,18 @@ jobs:
         py_ver: ["3.12"]
       fail-fast: false
       
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }} 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: lmod on macOS uses different versions
-        if: runner.os == 'macOS'
-        shell: bash -el {0}
-        run: |
-          mv test-environment_mac.yml test-environment.yml
-          
       - name: Modify python version in test env
         shell: bash -el {0}
         run: |
           cp test-environment.yml test-environment-${{ matrix.py_ver }}.yml
-          sed -E 's/- conda-forge::python.+/- conda-forge::python =${{ matrix.py_ver }}/' test-environment-${{ matrix.py_ver }}.yml > foo.yml
-          mv foo.yml test-environment-${{ matrix.py_ver }}.yml
+          sed -E -i 's/- conda-forge::python.+/- conda-forge::python =${{ matrix.py_ver }}/' test-environment-${{ matrix.py_ver }}.yml
           
-      - name: Check
-        shell: bash -el {0}
-        run: |
-          cat test-environment-${{ matrix.py_ver }}.yml
-
       - name: Setup omnibenchmark environment
         uses: mamba-org/setup-micromamba@v1
         with:
@@ -94,12 +82,12 @@ jobs:
       - name: Extra OS / apt (apptainer)
         run: |
           sudo apt install -y stress git wget openmpi-bin libopenmpi-dev apptainer debootstrap
-      
-      - name: CLI tests
+              
+      - name: Singularity tests
         shell: bash -el {0}
         run: |
           cd tests/software
           
           pytest -v -x --show-capture=stderr \
               --splits 3 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
-              cli_tests.py
+              singularity_tests.py
