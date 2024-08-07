@@ -18,46 +18,40 @@ from easybuild.framework.easyconfig.tools import det_easyconfig_paths, parse_eas
 from easybuild.tools.options import set_up_configuration
 from easybuild.tools.modules import get_software_root_env_var_name, modules_tool
 
+
 from importlib import resources as impresources
 from . import templates
 
 HOME = op.expanduser("~")
 
-# opts, _ = set_up_configuration(args=[], silent=True)
 set_up_configuration(args=["--quiet"], silent=True)
 
 ## shell-based stuff, partly to be replaced by direct eb API calls -------------------------------------
 
 
-def generate_default_easybuild_config_arguments(workdir):
-    # modulepath = op.join(workdir, 'easybuild', 'modules', 'all')
-    # buildpath = op.join(workdir, 'easybuild', 'build')
-    # containerpath = op.join(workdir, 'easybuild', 'containers')
-    # installpath = op.join(workdir, 'easybuild')
-    # repositorypath = op.join(workdir, 'easybuild', 'ebfiles_repo')
-    # robotpath = op.join(workdir, 'easybuild', 'easyconfigs') ## let's use default's
-    # sourcepath = op.join(workdir, 'easybuild', 'sources')
-
-    # args = """--buildpath=%(buildpath)s  --installpath-modules=%(modulepath)s \
-    #           --containerpath=%(containerpath)s --installpath=%(installpath)s \
-    #           --repositorypath=%(repositorypath)s --sourcepath=%(sourcepath)s""" %{
-    #               'buildpath' : buildpath,
-    #               'modulepath' : modulepath,
-    #               'containerpath' : containerpath,
-    #               'installpath' : installpath,
-    #               'repositorypath' : repositorypath,
-    #               'sourcepath' : sourcepath}
+def generate_default_easybuild_config_arguments() -> str:
     args = ""
     return args
 
 
-## do not use without handling the lmod / module envs explicitly
 def easybuild_easyconfig(
-    easyconfig, workdir, threads, containerize=False, container_build_image=False
-):
+    easyconfig: str,
+    workdir: str = os.getcwd(),
+    threads: int = 2,
+    containerize: bool = False,
+    container_build_image: bool = False,
+) -> str:
     """
     Easybuilds an easyconfig
+
+     Args:
+     - easyconfig (str): the easyconfig name. Doesn't have to be a full path. But readable from the robots path.
+     - workdir (str): working directory, a path to store results at. Legacy.
+     - threads (int): number of threads to build the software
+     - containerize (bool): generate a Singularity recipe file or not.
+     - container_build_image (bool): build a Singularity image or not.
     """
+
     cmd = build_easybuild_easyconfig_command(
         easyconfig=easyconfig,
         workdir=workdir,
@@ -76,10 +70,15 @@ def easybuild_easyconfig(
         return "LOG easybuild: \n{}\n".format(output)
 
 
-def parse_easyconfig(ec_fn, workdir):
+def parse_easyconfig(ec_fn: str, workdir: str = os.getcwd()) -> list:
     """
     Find and parse an easyconfig with specified filename,
     and return parsed easyconfig file (an EasyConfig instance).
+
+    Args:
+    - ec_fn (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
+    - workdir (str): working directory, a path to store results at. Legacy.
+
     """
     # opts, _ = set_up_configuration(args = generate_default_easybuild_config_arguments(workdir).split(),
     #                                silent = True)
@@ -95,7 +94,13 @@ def parse_easyconfig(ec_fn, workdir):
     return ec_path, ec_dicts[0]["ec"]
 
 
-def get_easyconfig_full_path(easyconfig, workdir):
+def get_easyconfig_full_path(easyconfig: str, workdir: str = os.getcwd()) -> str:
+    """
+    Finds the easyconfig full path
+    Args:
+    - easyconfig (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
+    - workdir (str): working directory, a path to store results at. Legacy.
+    """
     try:
         ec_path, ec = parse_easyconfig(easyconfig, workdir)
         return ec_path
@@ -103,32 +108,49 @@ def get_easyconfig_full_path(easyconfig, workdir):
         raise FileNotFoundError("ERROR: easyconfig not found.\n")
 
 
-def get_envmodule_name_from_easyconfig(easyconfig, workdir):
+def get_envmodule_name_from_easyconfig(easyconfig: str, workdir: str) -> str:
+    """
+    Returns the (standard) envmodulename from an easyconfig file.
+    Args:
+    - easyconfig (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
+    - workdir (str): working directory, a path to store results at. Legacy.
+    """
     ec_path, ec = parse_easyconfig(easyconfig, workdir)
     return os.path.join(ec["name"], det_full_ec_version(ec))
 
 
-def build_easybuild_easyconfig_command(
-    easyconfig, workdir, threads, containerize=False, container_build_image=False
-):
-
-    # args = generate_default_easybuild_config_arguments(workdir = workdir)
-    cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s \
-              --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" % {
-        "easyconfig": easyconfig,
-        # 'args' : args,
-        "threads": threads,
-    }
-    if containerize:
-        cmd += (
-            " --container-config bootstrap=localimage,from=example.sif --experimental"
-        )
-        if container_build_image:
-            cmd += " --container-build-image"
-    return cmd
+# def construct_easybuild_easyconfig_command(
+#     easyconfig : str, workdir :str =  os.getcwd(), threads : int = 2, containerize : bool =False, container_build_image : bool =False
+# ) -> str:
 
 
-def create_definition_file(easyconfig, singularity_recipe, envmodule, nthreads):
+#     # args = generate_default_easybuild_config_arguments(workdir = workdir)
+#     cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s \
+#               --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" % {
+#         "easyconfig": easyconfig,
+#         # 'args' : args,
+#         "threads": threads,
+#     }
+#     if containerize:
+#         cmd += (
+#             " --container-config bootstrap=localimage,from=example.sif --experimental"
+#         )
+#         if container_build_image:
+#             cmd += " --container-build-image"
+#     return cmd
+
+
+def create_definition_file(
+    easyconfig: str, singularity_recipe: str, envmodule: str, nthreads: int = 2
+) -> None:
+    """
+    Materializes a Singularity recipe to build a given easyconfig, using a Singularity recipe template.
+    Args:
+    - easyconfig (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
+    - singularity_recipe (str): path to a Singularity template
+    - envmodule (str): the envmodule name
+    - nthreads (int): number of threads for easybuild
+    """
     template = impresources.files(templates) / "ubuntu_jammy.txt"
     with open(template, "rt") as ubuntu, open(singularity_recipe, "w") as sing:
         for line in ubuntu.read().split("\n"):
@@ -141,7 +163,13 @@ def create_definition_file(easyconfig, singularity_recipe, envmodule, nthreads):
             sing.write(line + "\n")
 
 
-def singularity_build(easyconfig, singularity_recipe):
+def singularity_build(singularity_recipe: str) -> str:
+    """
+    Builds a Singularity recipe
+    Args:
+    - easyconfig (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
+    - singularity_recipe (str): path to a Singularity template
+    """
     image_name = op.basename(easyconfig) + ".sif"
     try:
         cmd = (
@@ -161,11 +189,13 @@ def singularity_build(easyconfig, singularity_recipe):
 
 
 ## untested,drafted 06 Aug 2024
-def singularity_push(sif, docker_username, docker_password, oras):
+def singularity_push(
+    sif: str, docker_username: str, docker_password: str, oras_url: str
+) -> None:
     cmd = f"""singularity push --docker-username {docker_username} \
                  --docker-password {docker_password} \
                  {sif} \
-                 {oras}"""
+                 {oras_url}"""
     try:
         output = subprocess.run(
             cmd.split(" "), shell=False, text=True, capture_output=True, check=True

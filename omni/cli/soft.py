@@ -91,7 +91,7 @@ def singularity_build(
         nthreads=str(len(os.sched_getaffinity(0))),
     )
 
-    eb.singularity_build(easyconfig=easyconfig, singularity_recipe=singularity_recipe)
+    eb.singularity_build(singularity_recipe=singularity_recipe)
     print("DONE: recipe and image built for " + singularity_recipe)
 
 
