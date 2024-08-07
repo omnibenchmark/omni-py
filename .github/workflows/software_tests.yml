@@ -18,7 +18,7 @@
 ## GPLv2
 ## License available at https://github.com/easybuilders/easybuild-easyconfigs/blob/develop/LICENSE
 
-name: software_eb_singularity
+name: software
 
 on:
   push:
@@ -27,20 +27,19 @@ on:
   pull_request:
 
 concurrency:
-  # Cancel concurrent flows on PRs
   group: ci-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  testing:
+  software_testing:
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        test_group: [1, 2, 3]
+        os: [ubuntu-22.04, ubuntu-20.04]
+        test_group: [1, 2, 3, 4, 5]
         py_ver: ["3.12"]
       fail-fast: false
       
-    runs-on: ${{ matrix.os }} 
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -82,12 +81,16 @@ jobs:
       - name: Extra OS / apt (apptainer)
         run: |
           sudo apt install -y stress git wget openmpi-bin libopenmpi-dev apptainer debootstrap
-              
-      - name: Singularity tests
+          
+      - name: Test
+        ## env:
+        ##   CI: true
+        env:
+          CI: false
         shell: bash -el {0}
         run: |
           cd tests/software
-          
+               
           pytest -v -x --show-capture=stderr \
-              --splits 3 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
-              singularity_tests.py
+              --splits 5 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
+              cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
