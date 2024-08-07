@@ -11,7 +11,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import sys, os #, subprocess
+import sys, os  # , subprocess
 import os.path as op
 import pytest
 from easybuild.tools.modules import modules_tool
@@ -21,16 +21,23 @@ from omni.software import easybuild_backend as eb
 sys.path.insert(0, op.dirname(__file__))
 # WD = op.dirname(__file__)
 
-    
+
 def test_omni_python_import():
     import omni
+
 
 def test_omni_easybuild_import():
     from omni.software import easybuild_backend as easy
 
-def test_easybuild_sys_toolchain_build():
-    run(Snakefile = op.join("04_easybuild_build_envmodules", "Snakefile"),
-        produced = op.join('binutils-2.35.eb_ld.txt'),
-        expected = op.join('04_easybuild_build_envmodules', 'expected_results', 'binutils-2.35.eb_ld.txt'),
-        method = 'envmodules')
 
+def test_easybuild_sys_toolchain_build():
+    run(
+        Snakefile=op.join("04_easybuild_build_envmodules", "Snakefile"),
+        produced=op.join("binutils-2.35.eb_ld.txt"),
+        expected=op.join(
+            "04_easybuild_build_envmodules",
+            "expected_results",
+            "binutils-2.35.eb_ld.txt",
+        ),
+        method="envmodules",
+    )
