@@ -13,19 +13,20 @@ import os, sys
 
 # import logging
 
-cli = typer.Typer(add_completion = True,  no_args_is_help = True, pretty_exceptions_short = True)
+cli = typer.Typer(add_completion = True,  no_args_is_help = True, pretty_exceptions_short = True,
+                  help = "Manage benchmark-specific software installations.")
 
 sing_cli = typer.Typer(add_completion = True,  no_args_is_help = True, pretty_exceptions_short = True)
 cli.add_typer(sing_cli, name = 'singularity',
-              help = 'Manage singularity- (apptainer-) based software installations. Uses easybuild.')
+              help = 'Manage singularity- (apptainer-) based software installations. Uses easybuild to build software.')
 
 conda_cli = typer.Typer(add_completion = True,  no_args_is_help = True, pretty_exceptions_short = True)
 cli.add_typer(conda_cli, name = 'conda',
               help = 'Manage conda-based software installations. Does not use easybuild.')
 
 module_cli = typer.Typer(add_completion = True,  no_args_is_help = True, pretty_exceptions_short = True)
-cli.add_typer(module_cli, name = 'module',
-              help = 'Manage module- based software installations. Uses easybuild.')
+cli.add_typer(module_cli, name = 'envmodules',
+              help = 'Manage envmodules-based software installations. Uses easybuild to build software.')
 
 
 ## singularity #####################################################################################
@@ -44,9 +45,9 @@ def singularity_build(
     """Build a singularity (fakeroot) image for a given easyconfig."""
     typer.echo(f"Installing software for {easyconfig} within a Singularity container. It will take some time.")
     
-    if eb.check_easybuild_status().returncode != 0:
+    if common.check_easybuild_status().returncode != 0:
         raise('ERROR: Easybuild not installed')
-    if eb.check_singularity_status().returncode != 0:
+    if common.check_singularity_status().returncode != 0:
         raise('ERROR: Singularity not installed')
 
     ## check the easyconfig exists
@@ -102,7 +103,7 @@ def singularity_push(
         ),
     ],
 ):
-    """Pushes a singularity SIF file to an ORAS-compatible registry"""
+    """Pushes a singularity SIF file to an ORAS-compatible registry."""
     typer.echo(f"Pushing {sif} to the registry {oras}.")
 
     eb.push_to_registry(sif = sif,
@@ -110,6 +111,48 @@ def singularity_push(
                         docker_password = docker_password,
                         oras = oras)
     print('DONE\n.')
+
+## envmodules ########################################################################################
+
+@module_cli.command("build")
+def envmodules_build(
+    easyconfig: Annotated[
+        str,
+        typer.Option(
+            "--easyconfig",
+            "-e",
+            help="Easyconfig",
+        ),
+    ],
+    threads: Annotated[
+        int,
+        typer.Option(
+            "--threads",
+            "-p",
+            help="Number of threads"
+        ),
+    ] = 2,
+):
+    """Build a given easyconfig (and generates the relevant envmodules)."""
+    typer.echo(f"Installing software for {easyconfig} using easybuild. It will take some time.")
+    
+    if common.check_easybuild_status().returncode != 0:
+        raise('ERROR: Easybuild not installed')
+    if common.check_singularity_status().returncode != 0:
+        raise('ERROR: Singularity not installed')
+
+    ## check the easyconfig exists
+    try:
+        fp = eb.get_easyconfig_full_path(easyconfig = easyconfig, workdir = os.getcwd())
+    except:
+        print('ERROR: easyconfig not found.\n')
+        sys.exit()
+        
+    eb.easybuild_easyconfig(easyconfig = easyconfig,
+                            workdir = os.getcwd(),
+                            threads = threads)
+    print('DONE')
+
 
 
 ## conda #############################################################################################
@@ -131,9 +174,7 @@ def pin_conda_env(
     typer.echo(f'DONE: Pinned {conda_env}\n')
 
 
-# def push_singularity(
-# )
-## these belong to the validator, not here
+## general stuff ######################################################################################
 
 @cli.command("check")
 def check(
@@ -146,22 +187,22 @@ def check(
                --what singularity : singularity \n
                --what module      : module tool, typically lmod \n 
                --what easybuild   : easybuild \n
-               --what conda       : conda \n""",
+               --what conda       : conda \n"""
         ),
     ],        
 ):
     """Check whether the component {what} is available."""
-    typer.echo(f"Checking whether the component {what} is available.")
+    typer.echo(f"Checking software stack handlers / backends (singularity, easybuild, etc).")
 
     if what == 'easybuild':
-        ret = eb.check_easybuild_status()
+        ret = common.check_easybuild_status()
     elif what == 'module':
         # eb.export_lmod_env_vars()
-        ret = eb.check_lmod_status() 
+        ret = common.check_lmod_status() 
     elif what == 'singularity':
-        ret =eb.check_singularity_status()
+        ret = common.check_singularity_status()
     elif what == 'conda':
-        ret = eb.check_conda_status()
+        ret = common.check_conda_status()
     else:
         raise typer.BadParameter("Bad `--what` value. Please check help (`ob software check --help`).")
     if ret.returncode == 0:

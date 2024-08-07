@@ -22,25 +22,6 @@ HOME=op.expanduser("~")
 
 ## shell-based stuff, partly to be replaced by direct eb API calls -------------------------------------
 
-def check_call(command, use_shell = False):
-    try:
-        ret = subprocess.run(command.split(' '), text = True, capture_output = True,
-                             check=True, shell = use_shell)
-        return(ret)
-    except Exception as e :
-        return(print("ERROR:", e))
-    
-def check_lmod_status():
-    return(check_call('type module', use_shell = True))
-
-def check_singularity_status():
-    return(check_call('singularity --version'))
-
-def check_easybuild_status():
-    return(check_call('eb --version'))
-
-def check_conda_status():
-    return(check_call('conda --version'))
     
 def generate_default_easybuild_config_arguments(workdir):
     modulepath = op.join(workdir, 'easybuild', 'modules', 'all')
@@ -62,29 +43,29 @@ def generate_default_easybuild_config_arguments(workdir):
                   'sourcepath' : sourcepath}
     return(args)
 
-# ## do not use without handling the lmod / module envs explicitly
-# def easybuild_easyconfig(easyconfig,
-#                          workdir,
-#                          threads,
-#                          containerize = False,
-#                          container_build_image = False):
-#     """
-#     easybuilds an easyconfig, potentially generating a (built) container image too
-#     """
-#     cmd = build_easybuild_easyconfig_command(easyconfig = easyconfing,
-#                                              workdir = workdir,
-#                                              threads = threads,
-#                                              containerize = containerize,
-#                                              container_build_image = container_build_image)
+## do not use without handling the lmod / module envs explicitly
+def easybuild_easyconfig(easyconfig,
+                         workdir,
+                         threads,
+                         containerize = False,
+                         container_build_image = False):
+    """
+    Easybuilds an easyconfig
+    """
+    cmd = build_easybuild_easyconfig_command(easyconfig = easyconfig,
+                                             workdir = workdir,
+                                             threads = threads,
+                                             containerize = False,
+                                             container_build_image = False)
     
-#     try:
-#         output = subprocess.check_output(
-#             cmd, stderr = subprocess.STDOUT, shell = True,
-#             universal_newlines = True)
-#     except subprocess.CalledProcessError as exc:
-#         return("ERROR easybuild failed:", exc.returncode, exc.output)
-#     else:
-#         return("LOG easybuild: \n{}\n".format(output))
+    try:
+        output = subprocess.check_output(
+            cmd, stderr = subprocess.STDOUT, shell = True,
+            universal_newlines = True)
+    except subprocess.CalledProcessError as exc:
+        return("ERROR easybuild failed:", exc.returncode, exc.output)
+    else:
+        return("LOG easybuild: \n{}\n".format(output))
 
 ## shell stuff end ------------------------------------------------------------------------------------
 
@@ -176,25 +157,25 @@ def check_envmodule_status(envmodule):
 #         return("LOG pulling: \n{}\n".format(output))
     
 
-# def build_easybuild_easyconfig_command(easyconfig,
-#                                        workdir,
-#                                        threads,
-#                                        containerize = False,
-#                                        container_build_image = False):
+def build_easybuild_easyconfig_command(easyconfig,
+                                       workdir,
+                                       threads,
+                                       containerize = False,
+                                       container_build_image = False):
 
     
-#     args = generate_default_easybuild_config_arguments(workdir = workdir)
+    args = generate_default_easybuild_config_arguments(workdir = workdir)
     
-#     cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s \
-#               --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" %{
-#                   'easyconfig' : easyconfig,
-#                   # 'args' : args,
-#                   'threads' : threads}
-#     if containerize:
-#         cmd += " --container-config bootstrap=localimage,from=example.sif --experimental"
-#         if container_build_image:
-#             cmd += " --container-build-image"        
-#     return(cmd)
+    cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s \
+              --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" %{
+                  'easyconfig' : easyconfig,
+                  # 'args' : args,
+                  'threads' : threads}
+    if containerize:
+        cmd += " --container-config bootstrap=localimage,from=example.sif --experimental"
+        if container_build_image:
+            cmd += " --container-build-image"        
+    return(cmd)
 
 def create_definition_file(easyconfig, singularity_recipe, envmodule, nthreads):
     template = impresources.files(templates) / 'ubuntu_jammy.txt'

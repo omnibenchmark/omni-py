@@ -35,22 +35,31 @@ jobs:
   testing:
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         test_group: [1, 2, 3]
         py_ver: ["3.12"]
       fail-fast: false
       
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: lmod on macOS uses different versions
+        if: runner.os == 'macOS'
+        shell: bash -el {0}
+        run: |
+          mv test-environment_mac.yml test-environment.yml
+          
       - name: Modify python version in test env
         shell: bash -el {0}
         run: |
           cp test-environment.yml test-environment-${{ matrix.py_ver }}.yml
-          sed -E -i 's/- python.+/- python =${{ matrix.py_ver }}/' test-environment-${{ matrix.py_ver }}.yml
-          
+          sed -E 's/- conda-forge::python.+/- conda-forge::python =${{ matrix.py_ver }}/' test-environment-${{ matrix.py_ver }}.yml > foo.yml
+          mv foo.yml test-environment-${{ matrix.py_ver }}.yml
+          cat test-environment-${{ matrix.py_ver }}.yml
+
       - name: Setup omnibenchmark environment
         uses: mamba-org/setup-micromamba@v1
         with:
