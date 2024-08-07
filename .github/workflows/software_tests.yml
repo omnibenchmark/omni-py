@@ -90,7 +90,11 @@ jobs:
         shell: bash -el {0}
         run: |
           cd tests/software
-               
+
+          module use "$HOME"/.local/easybuild/modules/all
+
+          export
+          
           pytest -v -x --show-capture=stderr \
               --splits 5 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
               cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
