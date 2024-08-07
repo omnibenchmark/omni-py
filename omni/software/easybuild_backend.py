@@ -20,27 +20,31 @@ from . import templates
 
 HOME=op.expanduser("~")
 
+opts, _ = set_up_configuration(args=[], silent=True)
+
+
 ## shell-based stuff, partly to be replaced by direct eb API calls -------------------------------------
 
     
 def generate_default_easybuild_config_arguments(workdir):
-    modulepath = op.join(workdir, 'easybuild', 'modules', 'all')
-    buildpath = op.join(workdir, 'easybuild', 'build')
-    containerpath = op.join(workdir, 'easybuild', 'containers')
-    installpath = op.join(workdir, 'easybuild')
-    repositorypath = op.join(workdir, 'easybuild', 'ebfiles_repo')
-    robotpath = op.join(workdir, 'easybuild', 'easyconfigs') ## let's use default's
-    sourcepath = op.join(workdir, 'easybuild', 'sources')
+    # modulepath = op.join(workdir, 'easybuild', 'modules', 'all')
+    # buildpath = op.join(workdir, 'easybuild', 'build')
+    # containerpath = op.join(workdir, 'easybuild', 'containers')
+    # installpath = op.join(workdir, 'easybuild')
+    # repositorypath = op.join(workdir, 'easybuild', 'ebfiles_repo')
+    # robotpath = op.join(workdir, 'easybuild', 'easyconfigs') ## let's use default's
+    # sourcepath = op.join(workdir, 'easybuild', 'sources')
     
-    args = """--buildpath=%(buildpath)s  --installpath-modules=%(modulepath)s \
-              --containerpath=%(containerpath)s --installpath=%(installpath)s \
-              --repositorypath=%(repositorypath)s --sourcepath=%(sourcepath)s""" %{
-                  'buildpath' : buildpath,
-                  'modulepath' : modulepath,
-                  'containerpath' : containerpath,
-                  'installpath' : installpath,
-                  'repositorypath' : repositorypath,
-                  'sourcepath' : sourcepath}
+    # args = """--buildpath=%(buildpath)s  --installpath-modules=%(modulepath)s \
+    #           --containerpath=%(containerpath)s --installpath=%(installpath)s \
+    #           --repositorypath=%(repositorypath)s --sourcepath=%(sourcepath)s""" %{
+    #               'buildpath' : buildpath,
+    #               'modulepath' : modulepath,
+    #               'containerpath' : containerpath,
+    #               'installpath' : installpath,
+    #               'repositorypath' : repositorypath,
+    #               'sourcepath' : sourcepath}
+    args = ""
     return(args)
 
 ## do not use without handling the lmod / module envs explicitly
@@ -128,15 +132,17 @@ def get_envmodule_name_from_easyconfig(easyconfig, workdir):
 #     else:
 #         return(0) # "Module tool: %s version %s" % (mod_tool.NAME, mod_tool.version))
 
-def check_available_modules():
-    return(modules_tool().available())
+# def list_available_modules(mod_name):
+#     modules_tool().use(op.join(HOME, '.local', 'easybuild'))
+#     return(modules_tool().available(mod_name = mod_name))
 
-def check_envmodule_status(envmodule):
-    mod_tool = modules_tool()
-    if len(mod_tool.available(envmodule)) == 0:
-        return('not installed')
-    else:
-        return('installed')
+        
+# def check_envmodule_status(envmodule):
+#     mod_tool = modules_tool()
+#     if len(mod_tool.available(envmodule)) == 0:
+#         return('not installed')
+#     else:
+#         return('installed')
 
 # # beware containerpath hardcoded to default
 # def get_toolchain_container_path(toochain,
@@ -215,3 +221,7 @@ def singularity_push(sif, docker_username, docker_password, oras):
         return("ERROR singularity build failed:", exc)
     else:
         return("DONE.")
+
+# def load_module_api(mod_name):
+#     modules_tool().use(op.join(HOME, '.local', 'easybuild'))
+#     modules_tool().load(modules = [mod_name], purge = False)

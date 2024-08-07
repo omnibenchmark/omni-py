@@ -24,6 +24,10 @@ test_cases = [
     (
         "software conda pin --env data/ripgrep.yml",
         "DONE: Pinned data/ripgrep.yml"
+    ),
+    (
+        "software envmodules build -e zlib-1.2.10.eb",
+        "Installing software for zlib-1.2.10.eb using easybuild. It will take some time"
     )
 ]
 

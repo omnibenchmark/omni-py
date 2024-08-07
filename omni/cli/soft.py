@@ -154,6 +154,37 @@ def envmodules_build(
     print('DONE')
 
 
+# @module_cli.command('list')
+# def envmodules_list():
+#     """Lists available modules"""
+#     typer.echo(f"Listing modules")
+    
+#     eb.list_available_modules("*")
+    
+#     print('DONE')
+    
+# @module_cli.command('load')
+# def envmodule_load(
+#     module: Annotated[
+#         str,
+#         typer.Option(
+#             "--module",
+#             "-m",
+#             help="Module name",
+#         ),
+#     ]
+# ):
+#     """Loads an envmodule"""
+#     typer.echo(f"Loading module {module}")
+
+#     if common.check_easybuild_status().returncode != 0:
+#         raise('ERROR: Easybuild not installed')
+    
+#     eb.load_module_api(mod_name = module)
+#     # print(module)
+    
+#     print('DONE')
+
 
 ## conda #############################################################################################
 
