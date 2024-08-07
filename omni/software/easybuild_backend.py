@@ -20,7 +20,8 @@ from . import templates
 
 HOME=op.expanduser("~")
 
-opts, _ = set_up_configuration(args=[], silent=True)
+# opts, _ = set_up_configuration(args=[], silent=True)
+set_up_configuration(args=['--quiet'], silent=True)
 
 
 ## shell-based stuff, partly to be replaced by direct eb API calls -------------------------------------
