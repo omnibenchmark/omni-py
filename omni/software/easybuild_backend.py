@@ -29,27 +29,28 @@ set_up_configuration(args=["--quiet"], silent=True)
 ## shell-based stuff, partly to be replaced by direct eb API calls -------------------------------------
 
 
-def generate_default_easybuild_config_arguments() -> str:
-    args = ""
+def generate_default_easybuild_config_arguments(modulepath: str = op.join(HOME, '.local', 'easybuild', 'modules', 'all')) -> str:
+    args = "--installpath-modules=" + modulepath
     return args
 
 
 def construct_easybuild_easyconfig_command(
-    easyconfig: str, workdir: str = os.getcwd(), threads: int = 2
+    easyconfig: str, threads: int = 2
 ) -> str:
     """
     Constructs an easybuild command to build an easyconfig
 
      Args:
      - easyconfig (str): the easyconfig name. Doesn't have to be a full path. But readable from the robots path.
-     - workdir (str): working directory, a path to store results at. Legacy.
      - threads (int): number of threads to build the software
     """
 
+    args = generate_default_easybuild_config_arguments()
     cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s \
-              --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" % {
+                %(args)s  --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" % {
         "easyconfig": easyconfig,
         "threads": threads,
+        "args" : args
     }
 
     return cmd
@@ -57,22 +58,18 @@ def construct_easybuild_easyconfig_command(
 
 def easybuild_easyconfig(
     easyconfig: str,
-    workdir: str = os.getcwd(),
     threads: int = 2,
-    containerize: bool = False,
-    container_build_image: bool = False,
 ) -> subprocess.CompletedProcess:
     """
     Easybuilds an easyconfig
 
      Args:
      - easyconfig (str): the easyconfig name. Doesn't have to be a full path. But readable from the robots path.
-     - workdir (str): working directory, a path to store results at. Legacy.
      - threads (int): number of threads to build the software
     """
 
     cmd = construct_easybuild_easyconfig_command(
-        easyconfig=easyconfig, workdir=workdir, threads=threads
+        easyconfig=easyconfig, threads=threads
     )
 
     try:
@@ -83,14 +80,13 @@ def easybuild_easyconfig(
         return ("ERROR easybuild failed:", exc.returncode, exc.output)
 
 
-def parse_easyconfig(ec_fn: str, workdir: str = os.getcwd()) -> list:
+def parse_easyconfig(ec_fn: str) -> list:
     """
     Find and parse an easyconfig with specified filename,
     and return parsed easyconfig file (an EasyConfig instance).
 
     Args:
     - ec_fn (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
-    - workdir (str): working directory, a path to store results at. Legacy.
 
     """
     # opts, _ = set_up_configuration(args = generate_default_easybuild_config_arguments(workdir).split(),
@@ -107,28 +103,26 @@ def parse_easyconfig(ec_fn: str, workdir: str = os.getcwd()) -> list:
     return ec_path, ec_dicts[0]["ec"]
 
 
-def get_easyconfig_full_path(easyconfig: str, workdir: str = os.getcwd()) -> str:
+def get_easyconfig_full_path(easyconfig: str) -> str:
     """
     Finds the easyconfig full path
     Args:
     - easyconfig (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
-    - workdir (str): working directory, a path to store results at. Legacy.
     """
     try:
-        ec_path, ec = parse_easyconfig(easyconfig, workdir)
+        ec_path, ec = parse_easyconfig(easyconfig)
         return ec_path
     except:
         raise FileNotFoundError("ERROR: easyconfig not found.\n")
 
 
-def get_envmodule_name_from_easyconfig(easyconfig: str, workdir: str) -> str:
+def get_envmodule_name_from_easyconfig(easyconfig: str) -> str:
     """
     Returns the (standard) envmodulename from an easyconfig file.
     Args:
     - easyconfig (str): easyconfig filename. Doesn't have to be a full path. But readable from the robots path
-    - workdir (str): working directory, a path to store results at. Legacy.
     """
-    ec_path, ec = parse_easyconfig(easyconfig, workdir)
+    ec_path, ec = parse_easyconfig(easyconfig)
     return os.path.join(ec["name"], det_full_ec_version(ec))
 
 

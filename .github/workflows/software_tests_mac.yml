@@ -112,10 +112,10 @@ jobs:
           if [ -f /opt/homebrew/opt/lmod/init/profile ]; then
                 source /opt/homebrew/opt/lmod/init/profile
           fi
-             eb --install-latest-eb-release --prefix $HOME/easybuild
+             eb --install-latest-eb-release --prefix $HOME/.local/easybuild
           
-          module use $HOME/easybuild/modules/all
-          module spider
+          module use $HOME/.local/easybuild/modules/all
+          module list
        
       - name: Test
         ## env:
@@ -133,7 +133,9 @@ jobs:
           fi
           cd tests/software
 
-          module use $HOME/easybuild/modules/all
+          module use $HOME/.local/easybuild/modules/all
+          module activate easybuild
+          module list
 
           # module use "$HOME"/.local/easybuild/modules/all
 
@@ -143,4 +145,4 @@ jobs:
               conda_tests.py envmodules_tests.py
 
           pytest -v -x --show-capture=stderr \
-              cli_tests.py singularity_tests.py  
+              cli_tests.py

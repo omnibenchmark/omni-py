@@ -74,7 +74,7 @@ def singularity_build(
 
     ## check the easyconfig exists
     try:
-        fp = eb.get_easyconfig_full_path(easyconfig=easyconfig, workdir=os.getcwd())
+        fp = eb.get_easyconfig_full_path(easyconfig=easyconfig)
     except:
         print("ERROR: easyconfig not found.\n")
         sys.exit()
@@ -82,7 +82,7 @@ def singularity_build(
     ## do
     singularity_recipe = "Singularity_" + easyconfig + ".txt"
     envmodule_name = eb.get_envmodule_name_from_easyconfig(
-        easyconfig, workdir=os.getcwd()
+        easyconfig
     )
     eb.create_definition_file(
         easyconfig=easyconfig,
@@ -172,12 +172,12 @@ def envmodules_build(
 
     ## check the easyconfig exists
     try:
-        fp = eb.get_easyconfig_full_path(easyconfig=easyconfig, workdir=os.getcwd())
+        fp = eb.get_easyconfig_full_path(easyconfig=easyconfig)
     except:
         print("ERROR: easyconfig not found.\n")
         sys.exit()
 
-    eb.easybuild_easyconfig(easyconfig=easyconfig, workdir=os.getcwd(), threads=threads)
+    eb.easybuild_easyconfig(easyconfig=easyconfig, threads=threads)
     print("DONE")
 
 
