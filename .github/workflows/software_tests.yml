@@ -53,8 +53,10 @@ jobs:
       - name: Install Lmod using homebrew
         shell: bash -el {0}
         run: |
+             brew update
              brew doctor
-             brew install lmod
-             type module
+             brew install gnu-sed
+             #brew install lmod
+             # type module
              export
         if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
