@@ -118,7 +118,7 @@ jobs:
           fi
           cd tests/software
 
-          module use "$HOME"/.local/easybuild/modules/all
+          # module use "$HOME"/.local/easybuild/modules/all
 
           export
           
