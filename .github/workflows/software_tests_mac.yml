@@ -123,5 +123,7 @@ jobs:
           export
           
           pytest -v -x --show-capture=stderr \
-              --splits 2 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
-              cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
+              conda_tests.py envmodules_tests.py
+
+          pytest -v -x --show-capture=stderr \
+              cli_tests.py singularity_tests.py  
