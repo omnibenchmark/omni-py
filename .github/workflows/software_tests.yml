@@ -59,7 +59,7 @@ jobs:
              brew install python
              brew install git
              brew install git-lfs
-             brew install lmod
+             brew install lmod             
              brew install wget
              brew install bash
              brew untap homebrew/cask
@@ -69,4 +69,11 @@ jobs:
              brew reinstall packer
              brew install curl
              brew reinstall cmake
+             if [ -f /usr/local/opt/lmod/init/profile ]; then
+                source /usr/local/opt/lmod/init/profile
+             fi
+             if [ -f /opt/homebrew/opt/lmod/init/profile ]; then
+                source /opt/homebrew/opt/lmod/init/profile
+             fi
+             module --version
         if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
