@@ -55,7 +55,9 @@ jobs:
         run: |
              unset HOMEBREW_NO_INSTALL_FROM_API;
              brew upgrade
-             brew upgrade ruby
+             brew install ruby
+             brew doctor
              brew update
+             brew install lua
              brew doctor
         if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
