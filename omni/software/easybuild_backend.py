@@ -34,13 +34,34 @@ def generate_default_easybuild_config_arguments() -> str:
     return args
 
 
+def construct_easybuild_easyconfig_command(
+    easyconfig: str, workdir: str = os.getcwd(), threads: int = 2
+) -> str:
+    """
+    Constructs an easybuild command to build an easyconfig
+
+     Args:
+     - easyconfig (str): the easyconfig name. Doesn't have to be a full path. But readable from the robots path.
+     - workdir (str): working directory, a path to store results at. Legacy.
+     - threads (int): number of threads to build the software
+    """
+
+    cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s \
+              --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" % {
+        "easyconfig": easyconfig,
+        "threads": threads,
+    }
+
+    return cmd
+
+
 def easybuild_easyconfig(
     easyconfig: str,
     workdir: str = os.getcwd(),
     threads: int = 2,
     containerize: bool = False,
     container_build_image: bool = False,
-) -> str:
+) -> subprocess.CompletedProcess:
     """
     Easybuilds an easyconfig
 
@@ -48,26 +69,18 @@ def easybuild_easyconfig(
      - easyconfig (str): the easyconfig name. Doesn't have to be a full path. But readable from the robots path.
      - workdir (str): working directory, a path to store results at. Legacy.
      - threads (int): number of threads to build the software
-     - containerize (bool): generate a Singularity recipe file or not.
-     - container_build_image (bool): build a Singularity image or not.
     """
 
-    cmd = build_easybuild_easyconfig_command(
-        easyconfig=easyconfig,
-        workdir=workdir,
-        threads=threads,
-        containerize=False,
-        container_build_image=False,
+    cmd = construct_easybuild_easyconfig_command(
+        easyconfig=easyconfig, workdir=workdir, threads=threads
     )
 
     try:
-        output = subprocess.check_output(
-            cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True
+        output = subprocess.run(
+            cmd.split(" "), shell=True, text=True, capture_output=True, check=True
         )
     except subprocess.CalledProcessError as exc:
         return ("ERROR easybuild failed:", exc.returncode, exc.output)
-    else:
-        return "LOG easybuild: \n{}\n".format(output)
 
 
 def parse_easyconfig(ec_fn: str, workdir: str = os.getcwd()) -> list:
@@ -163,7 +176,9 @@ def create_definition_file(
             sing.write(line + "\n")
 
 
-def singularity_build(singularity_recipe: str) -> str:
+def singularity_build(
+    easyconfig: str, singularity_recipe: str
+) -> subprocess.CompletedProcess:
     """
     Builds a Singularity recipe
     Args:
@@ -179,19 +194,20 @@ def singularity_build(singularity_recipe: str) -> str:
             + " "
             + singularity_recipe
         )
-        output = subprocess.check_output(
-            cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True
+        # output = subprocess.check_output(
+        #     cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True
+        # )
+        output = subprocess.run(
+            cmd.split(" "), shell=False, text=True, capture_output=True, check=True
         )
     except subprocess.CalledProcessError as exc:
         return ("ERROR singularity build failed:", exc.returncode, exc.output)
-    else:
-        return "LOG singularity build output: \n{}\n".format(output)
 
 
 ## untested,drafted 06 Aug 2024
 def singularity_push(
     sif: str, docker_username: str, docker_password: str, oras_url: str
-) -> None:
+) -> subprocess.CompletedProcess:
     cmd = f"""singularity push --docker-username {docker_username} \
                  --docker-password {docker_password} \
                  {sif} \
@@ -202,5 +218,3 @@ def singularity_push(
         )
     except Exception as exc:
         return ("ERROR singularity build failed:", exc)
-    else:
-        return "DONE."
