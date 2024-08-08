@@ -99,9 +99,24 @@ jobs:
           cache-environment: true
 
       - name: Extra OS / apt (apptainer)
+        shell: bash -el {0}
         run: |
            brew install qemu lima
+
+      - name: Reinstall easybuild using easybuild
+        shell: bash -el {0}
+        run: |
+          if [ -f /usr/local/opt/lmod/init/profile ]; then
+                source /usr/local/opt/lmod/init/profile
+          fi
+          if [ -f /opt/homebrew/opt/lmod/init/profile ]; then
+                source /opt/homebrew/opt/lmod/init/profile
+          fi
+             eb --install-latest-eb-release --prefix $HOME/easybuild
           
+          module use $HOME/easybuild/modules/all
+          module spider
+       
       - name: Test
         ## env:
         ##   CI: true
@@ -117,6 +132,8 @@ jobs:
                 source /opt/homebrew/opt/lmod/init/profile
           fi
           cd tests/software
+
+          module use $HOME/easybuild/modules/all
 
           # module use "$HOME"/.local/easybuild/modules/all
 
