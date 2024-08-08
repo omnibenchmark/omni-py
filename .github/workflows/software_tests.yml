@@ -53,14 +53,17 @@ jobs:
       - name: Install Lmod using homebrew
         shell: bash -el {0}
         run: |
-             unset HOMEBREW_NO_INSTALL_FROM_API;
              brew upgrade
-             brew install ruby
-             echo 'export PATH="/usr/local/opt/ruby/bin:$PATH"' >> /Users/runner/.bash_profile
-             export LDFLAGS="-L/usr/local/opt/ruby/lib"
-             export CPPFLAGS="-I/usr/local/opt/ruby/include"
-             export PKG_CONFIG_PATH="/usr/local/opt/ruby/lib/pkgconfig"
-             brew install packer
-             brew upgrade openssl
+             brew install coreutils
+             brew install gcc
+             brew install python
+             brew install git
+             brew install git-lfs
+             brew install lmod
+             brew install wget
+             brew install bash
+             brew install curl
+             brew install cmake
+             brew install openssl
              brew doctor
         if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
