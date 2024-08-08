@@ -18,12 +18,12 @@
 ## GPLv2
 ## License available at https://github.com/easybuilders/easybuild-easyconfigs/blob/develop/LICENSE
 
-name: software
+name: mac_homebrew_lmod
 
 on:
   push:
     branches:
-      - sw_imallona
+      - homebrew
   pull_request:
 
 concurrency:
@@ -34,67 +34,27 @@ jobs:
   software_testing:
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04]
-        test_group: [1, 2, 3, 4, 5]
+        os: [macos-14, macos-13]
+        test_group: [1]
         py_ver: ["3.12"]
       fail-fast: false
-      
+       
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Modify python version in test env
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
+        
+      - name: Install Lmod using homebrew
         shell: bash -el {0}
         run: |
-          cp test-environment.yml test-environment-${{ matrix.py_ver }}.yml
-          sed -E -i 's/- conda-forge::python.+/- conda-forge::python =${{ matrix.py_ver }}/' test-environment-${{ matrix.py_ver }}.yml
-          
-      - name: Setup omnibenchmark environment
-        uses: mamba-org/setup-micromamba@v1
-        with:
-          environment-file: test-environment-${{ matrix.py_ver }}.yml
-          environment-name: omb
-          cache-environment: true
-
-      - name: install OS & Python packages
-        run: |
-          # disable apt-get update, we don't really need it,
-          # and it does more harm than good (it's fairly expensive, and it results in flaky test runs)
-          ## # sudo apt-get update
-          sudo add-apt-repository -y ppa:apptainer/ppa
-          sudo apt-get update # so updating - for singularity
-          # for modules tool
-          sudo apt-get install lua5.2 liblua5.2-dev lua-filesystem lua-posix tcl tcl-dev
-          # fix for lua-posix packaging issue,
-          #   see https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
-          # needed for Ubuntu 18.04, but not for Ubuntu 20.04, so skipping symlinking if posix.so already exists
-          if [ ! -e /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so ] ; then
-            sudo ln -s /usr/lib/x86_64-linux-gnu/lua/5.2/posix_c.so /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so
-          fi
-          # for testing OpenMPI-system*eb we need to have Open MPI installed
-          sudo apt-get install libopenmpi-dev openmpi-bin
-          ## required for test_dep_graph
-          pip install pep8 python-graph-core python-graph-dot
-
-      - name: Extra OS / apt (apptainer)
-        run: |
-          sudo apt install -y stress git wget openmpi-bin libopenmpi-dev apptainer debootstrap
-          
-      - name: Test
-        ## env:
-        ##   CI: true
-        env:
-          CI: false
-        shell: bash -el {0}
-        run: |
-          cd tests/software
-
-          module use "$HOME"/.local/easybuild/modules/all
-
-          export
-          
-          pytest -v -x --show-capture=stderr \
-              --splits 5 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
-              cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
+             brew doctor
+             brew install lmod
+             type module
+             export
+        if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
