@@ -53,10 +53,15 @@ jobs:
       - name: Install Lmod using homebrew
         shell: bash -el {0}
         run: |
+             unset HOMEBREW_NO_INSTALL_FROM_API;
              brew update
+             brew upgrade
+             brew update
+             brew untap homebrew/cask
+             brew untap homebrew/core
              brew doctor
              brew install gnu-sed
              #brew install lmod
              # type module
-             export
+             # export
         if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
