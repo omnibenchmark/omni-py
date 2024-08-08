@@ -56,8 +56,11 @@ jobs:
              unset HOMEBREW_NO_INSTALL_FROM_API;
              brew upgrade
              brew install ruby
-             brew doctor
-             brew update
-             brew install lua
+             echo 'export PATH="/usr/local/opt/ruby/bin:$PATH"' >> /Users/runner/.bash_profile
+             export LDFLAGS="-L/usr/local/opt/ruby/lib"
+             export CPPFLAGS="-I/usr/local/opt/ruby/include"
+             export PKG_CONFIG_PATH="/usr/local/opt/ruby/lib/pkgconfig"
+             brew install packer
+             brew upgrade openssl
              brew doctor
         if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
