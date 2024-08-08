@@ -62,8 +62,11 @@ jobs:
              brew install lmod
              brew install wget
              brew install bash
+             brew untap homebrew/cask
+             brew untap homebrew/core
+             brew reinstall openssl@3
+             brew reinstall ruby@3.0
+             brew reinstall packer
              brew install curl
-             brew install cmake
-             brew install openssl
-             brew doctor
+             brew reinstall cmake
         if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
