@@ -11,6 +11,7 @@ from omni.software import easybuild_backend as easy
 from omni.software import common
 # from omni.software import common
 import shutil
+from env_modules_python import module
 
 LMOD_VERS="8.7"
 
@@ -26,6 +27,10 @@ os.makedirs(WD, exist_ok = True)
 
 # easy.export_lmod_env_vars()
 
+shell.executable("/bin/bash")
+shell.prefix("source ~/.bashrc; source $LMOD_PKG/init/bash; module use ~/.local/easybuild/modules/all;")
+
+
 for eb in easyconfigs:
     rule:
         name: f"{{easyconfig}}_easybuild_build".format(easyconfig=eb)
@@ -38,10 +43,10 @@ for eb in easyconfigs:
         params:
             workdir = WD
         run:
-            shell('echo $MODULEPATH')
+            print(module('list'))
             common.check_easybuild_status()
-            print(easy.easybuild_easyconfig(easyconfig = eb,
-                                      threads = 2))
+            easy.easybuild_easyconfig(easyconfig = eb,
+                                      threads = 2)
             with open(output.flag, 'a'):
                 os.utime(output.flag, None)
             
@@ -53,15 +58,23 @@ for eb in easyconfigs:
             flag = op.join(WD, '{easyconfig}_flag')
         envmodules:
             easy.get_envmodule_name_from_easyconfig(eb)
+        params:
+            env = easy.get_envmodule_name_from_easyconfig(eb)
         output:
             op.join('{easyconfig}_ld.txt')
         shell:
             """
-            export
-            echo $MODULEPATH
+            # cat $LMOD_PKG/init/bash
+            source ~/.bashrc
+            source $LMOD_PKG/init/bash
+            module use ~/.local/easybuild/modules/all
+            export | grep -i module
+            # export
+            # module load {params.env}
+            # export > {output}
             module list
             ld --version > {output}
             """
             
-onsuccess:
-    shutil.rmtree(WD)
+# onsuccess:
+#     shutil.rmtree(WD)
