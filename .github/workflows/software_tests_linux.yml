@@ -95,14 +95,11 @@ jobs:
           module use "$HOME"/.local/easybuild/modules/all
           # module spider
           export PYTHONPATH=${PYTHONPATH}:$LMOD_DIR/../init   
-          export > mod.env
+          # export > mod.env
           
           pytest -v -x --show-capture=stderr \
               --splits 2 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
-              cli_tests.py conda_tests.py singularity_tests.py 
-
-          # pytest -v -x --show-capture=stderr --splits 2 --group ${{ matrix.test_group }} \
-          #     --envfile mod.env \ envmodules_tests.py
-
+              cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
+          
           pytest -v -x --show-capture=stderr --splits 2 --group ${{ matrix.test_group }} \
               envmodules_tests.py 

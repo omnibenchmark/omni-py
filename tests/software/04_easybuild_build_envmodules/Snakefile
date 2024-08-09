@@ -27,8 +27,8 @@ os.makedirs(WD, exist_ok = True)
 
 # easy.export_lmod_env_vars()
 
-shell.executable("/bin/bash")
-shell.prefix("source ~/.bashrc; source $LMOD_PKG/init/bash; module use ~/.local/easybuild/modules/all;")
+# shell.executable("/bin/bash")
+# shell.prefix("source ~/.bashrc; source $LMOD_PKG/init/bash; module use ~/.local/easybuild/modules/all;")
 
 
 for eb in easyconfigs:
@@ -57,7 +57,7 @@ for eb in easyconfigs:
         input:
             flag = op.join(WD, '{easyconfig}_flag')
         envmodules:
-            easy.get_envmodule_name_from_easyconfig(eb)
+            op.join('all', easy.get_envmodule_name_from_easyconfig(eb))
         params:
             env = easy.get_envmodule_name_from_easyconfig(eb)
         output:
@@ -65,14 +65,14 @@ for eb in easyconfigs:
         shell:
             """
             # cat $LMOD_PKG/init/bash
-            source ~/.bashrc
-            source $LMOD_PKG/init/bash
-            module use ~/.local/easybuild/modules/all
-            export | grep -i module
-            # export
-            # module load {params.env}
-            # export > {output}
-            module list
+            # source ~/.bashrc
+            # source $LMOD_PKG/init/bash
+            # module use ~/.local/easybuild/modules/all
+            # export | grep -i module
+            # # export
+            # # module load {params.env}
+            # # export > {output}
+            # module list
             ld --version > {output}
             """
             
