@@ -91,9 +91,12 @@ jobs:
         run: |
           cd tests/software
 
+          source "$LMOD_PKG"/init/profile
           module use "$HOME"/.local/easybuild/modules/all
           export
           
           pytest -v -x --show-capture=stderr \
               --splits 2 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
               cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
+
+          snakemake -s 04_easybuild_build_envmodules/Snakefile --cores 1 --use-envmodules
