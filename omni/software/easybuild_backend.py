@@ -46,8 +46,7 @@ def construct_easybuild_easyconfig_command(
     """
 
     args = generate_default_easybuild_config_arguments()
-    cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s \
-                %(args)s  --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" % {
+    cmd = """eb %(easyconfig)s --robot --parallel=%(threads)s %(args)s --detect-loaded-modules=unload --check-ebroot-env-vars=unset""" % {
         "easyconfig": easyconfig,
         "threads": threads,
         "args" : args
@@ -59,7 +58,7 @@ def construct_easybuild_easyconfig_command(
 def easybuild_easyconfig(
     easyconfig: str,
     threads: int = 2,
-) -> subprocess.CompletedProcess:
+) -> int:
     """
     Easybuilds an easyconfig
 
@@ -72,12 +71,12 @@ def easybuild_easyconfig(
         easyconfig=easyconfig, threads=threads
     )
 
-    try:
-        output = subprocess.run(
-            cmd.split(" "), shell=True, text=True, capture_output=True, check=True
-        )
-    except subprocess.CalledProcessError as exc:
-        return ("ERROR easybuild failed:", exc.returncode, exc.output)
+    # try:
+    output = subprocess.call(
+        cmd, shell=True
+    )
+    # except subprocess.CalledProcessError as exc:
+    #     return ("ERROR easybuild failed:", exc.returncode, exc.output)
 
 
 def parse_easyconfig(ec_fn: str) -> list:

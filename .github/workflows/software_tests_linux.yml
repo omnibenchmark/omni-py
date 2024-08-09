@@ -93,12 +93,13 @@ jobs:
 
           source "$LMOD_PKG"/init/profile
           module use "$HOME"/.local/easybuild/modules/all
-          export > mod.env
+          # module spider
+          # export > mod.env
           
           pytest -v -x --show-capture=stderr \
               --splits 2 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
-              cli_tests.py conda_tests.py singularity_tests.py
+              cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
 
-          pytest -v -x --show-capture=stderr --splits 2 --group ${{ matrix.test_group }} \
-              --envfile mod.env \
-              envmodules_tests.py
+          # pytest -v -x --show-capture=stderr --splits 2 --group ${{ matrix.test_group }} \
+          #     --envfile mod.env \
+          #     envmodules_tests.py

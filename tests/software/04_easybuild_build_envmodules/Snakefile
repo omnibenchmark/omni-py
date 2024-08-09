@@ -40,8 +40,8 @@ for eb in easyconfigs:
         run:
             shell('echo $MODULEPATH')
             common.check_easybuild_status()
-            easy.easybuild_easyconfig(easyconfig = eb,
-                                      threads = 2)
+            print(easy.easybuild_easyconfig(easyconfig = eb,
+                                      threads = 2))
             with open(output.flag, 'a'):
                 os.utime(output.flag, None)
             
