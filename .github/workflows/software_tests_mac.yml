@@ -22,8 +22,8 @@ name: software
 
 on:
   push:
-    branches:
-      - sw_imallona
+    branches: 
+      - nonexistent  ############################## <---------
   pull_request:
 
 concurrency:

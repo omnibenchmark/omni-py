@@ -38,6 +38,7 @@ for eb in easyconfigs:
         params:
             workdir = WD
         run:
+            shell('echo $MODULEPATH')
             common.check_easybuild_status()
             easy.easybuild_easyconfig(easyconfig = eb,
                                       threads = 2)
@@ -56,6 +57,7 @@ for eb in easyconfigs:
             op.join('{easyconfig}_ld.txt')
         shell:
             """
+            export
             echo $MODULEPATH
             module list
             ld --version > {output}
