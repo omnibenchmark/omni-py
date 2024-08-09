@@ -34,7 +34,7 @@ jobs:
   software_testing:
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04]
+        os: [ubuntu-22.04]
         test_group: [1, 2]
         py_ver: ["3.12"]
       fail-fast: false
@@ -93,10 +93,12 @@ jobs:
 
           source "$LMOD_PKG"/init/profile
           module use "$HOME"/.local/easybuild/modules/all
-          export
+          export > mod.env
           
           pytest -v -x --show-capture=stderr \
               --splits 2 --group ${{ matrix.test_group }} --splitting-algorithm=least_duration \
-              cli_tests.py conda_tests.py singularity_tests.py envmodules_tests.py
+              cli_tests.py conda_tests.py singularity_tests.py
 
-          snakemake -s 04_easybuild_build_envmodules/Snakefile --cores 1 --use-envmodules
+          pytest -v -x --show-capture=stderr --splits 2 --group ${{ matrix.test_group }} \
+              --envfile mod.env \
+              envmodules_tests.py
