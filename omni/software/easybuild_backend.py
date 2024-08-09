@@ -182,8 +182,7 @@ def singularity_build(
     image_name = op.basename(easyconfig) + ".sif"
     try:
         cmd = (
-            """ export PATH=/usr/sbin:$PATH; 
-        singularity build --fakeroot """
+            "singularity build --fakeroot "
             + image_name
             + " "
             + singularity_recipe
