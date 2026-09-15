@@ -1156,6 +1156,24 @@ def _filter_collectors_by_stages(collectors, included_stage_ids, benchmark):
     return kept, dropped
 
 
+def _collector_skip_message(collector_id, until_stage, filtered):
+    """Why a metric collector was dropped, named by the mechanism that pruned it."""
+    if until_stage is not None:
+        return (
+            f"--until {until_stage}: skipping metric collector "
+            f"'{collector_id}' (references pruned stages)."
+        )
+    if filtered:
+        return (
+            f"--filter: skipping metric collector '{collector_id}' "
+            "(references stages the filter pruned)."
+        )
+    return (
+        f"Skipping metric collector '{collector_id}': it references a stage "
+        "that produced no nodes (pruned by requires/exclude)."
+    )
+
+
 def _generate_explicit_snakefile(
     benchmark: BenchmarkExecution,
     benchmark_yaml_path: Path,
@@ -1758,17 +1776,12 @@ def _generate_explicit_snakefile(
         collectors_to_resolve, dropped = _filter_collectors_by_stages(
             collectors_to_resolve, stages_with_nodes, benchmark.model
         )
+        # A stage emptied on purpose (--until, --filter) is not worth a warning;
+        # one emptied by requires/exclude usually is.
+        deliberate = until_stage is not None or picks is not None
         for cid in dropped:
-            if until_stage is not None:
-                logger.info(
-                    f"--until {until_stage}: skipping metric collector "
-                    f"'{cid}' (references pruned stages)."
-                )
-            else:
-                logger.warning(
-                    f"Skipping metric collector '{cid}': it references a stage "
-                    f"that produced no nodes (pruned by requires/exclude)."
-                )
+            msg = _collector_skip_message(cid, until_stage, picks is not None)
+            logger.info(msg) if deliberate else logger.warning(msg)
         try:
             collector_nodes = resolve_metric_collectors(
                 metric_collectors=collectors_to_resolve,

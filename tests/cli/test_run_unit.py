@@ -24,6 +24,7 @@ from omnibenchmark.cli.run import (
     _empty_stage_warning,
     _apply_until_filter,
     _filter_collectors_by_stages,
+    _collector_skip_message,
     run,
 )
 from omnibenchmark.core._lineage import (
@@ -1710,3 +1711,28 @@ def test_run_filter_reads_blob_from_file(tmp_path):
         assert mock_rb.call_args.kwargs["filter_blob"]["picks"]["stage0"] == {
             "mod0": ["00000000"]
         }
+
+
+# ---------------------------------------------------------------------------
+# _collector_skip_message
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.short
+class TestCollectorSkipMessage:
+    def test_until_names_the_stage(self):
+        msg = _collector_skip_message("MC1", until_stage="preproc", filtered=False)
+        assert "--until preproc" in msg and "MC1" in msg
+
+    def test_filter_blames_the_filter_not_requires_exclude(self):
+        msg = _collector_skip_message("MC1", until_stage=None, filtered=True)
+        assert "--filter" in msg
+        assert "requires/exclude" not in msg
+
+    def test_organic_prune_blames_requires_exclude(self):
+        msg = _collector_skip_message("MC1", until_stage=None, filtered=False)
+        assert "requires/exclude" in msg
+
+    def test_until_wins_over_filter(self):
+        msg = _collector_skip_message("MC1", until_stage="preproc", filtered=True)
+        assert msg.startswith("--until preproc")
