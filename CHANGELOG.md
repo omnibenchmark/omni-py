@@ -18,6 +18,8 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 - fix: `modules.txt` listed one module per repository+commit, dropping every module that shares a repo with another
 - feat: a join inherits lineage labels from every branch, not only the one that named it (design 010 §5.2)
 - feat: a `provides` label is owned by one stage; a second stage declaring it is a parse-time error (design 008 §3.5)
+- fix: `ob describe status` no longer crashes with a `KeyError` on benchmarks whose DAG has more than one terminal stage (#371)
+- fix(archive): skip internal state dirs (`.snakemake`, `.modules`, `.envs`, `.logs`, `.cache`) when sweeping the results dir, instead of archiving gigabytes of execution state as results (#324)
 
 ## [0.6.0](https://github.com/omnibenchmark/omnibenchmark/releases/tag/v0.6.0) (Jul 21st 2026)
 

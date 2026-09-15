@@ -13,6 +13,7 @@ from omnibenchmark.archive.components import (
     prepare_archive_code,
     prepare_archive_results_local,
 )
+from omnibenchmark.constants import INTERNAL_OUT_DIRS
 
 
 @pytest.mark.short
@@ -180,6 +181,51 @@ def test_prepare_archive_results_local_no_files():
         result = prepare_archive_results_local(mock_benchmark, "nonexistent")
 
         assert len(result) == 0
+
+
+@pytest.mark.short
+def test_prepare_archive_results_local_excludes_internal_dirs(tmp_path):
+    """Test prepare_archive_results_local skips internal state dirs under out/.
+
+    These hold Snakemake's execution state (locks, logs, metadata), module
+    checkouts, resolved environments (which symlink multi-GB images) and tool
+    caches, not benchmark results. They can grow to many gigabytes and were
+    previously swept into the archive by the catch-all directory scan.
+    """
+    results_dir = tmp_path / "out"
+    results_dir.mkdir()
+
+    real_result = results_dir / "real_result.json"
+    real_result.write_text("{}")
+
+    # A real result nested in an ordinary subdirectory: only the internal dirs
+    # are special-cased, not nesting in general.
+    nested_result_dir = results_dir / "data" / "D1"
+    nested_result_dir.mkdir(parents=True)
+    nested_result = nested_result_dir / "nested_result.json"
+    nested_result.write_text("{}")
+
+    for internal in INTERNAL_OUT_DIRS:
+        junk_dir = results_dir / internal / "some_tool"
+        junk_dir.mkdir(parents=True)
+        (junk_dir / "junk_file").write_text("junk")
+
+    # `.metadata` is run provenance, not execution state: it must be archived.
+    metadata_dir = results_dir / ".metadata"
+    metadata_dir.mkdir()
+    manifest = metadata_dir / "manifest.json"
+    manifest.write_text("{}")
+
+    mock_benchmark = Mock()
+
+    with patch(
+        "omnibenchmark.archive.components.get_expected_benchmark_output_files"
+    ) as mock_expected:
+        mock_expected.return_value = []
+
+        result = prepare_archive_results_local(mock_benchmark, str(results_dir))
+
+    assert set(result) == {real_result, nested_result, manifest}
 
 
 @pytest.mark.short

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
+from omnibenchmark.constants import INTERNAL_OUT_DIRS
 from omnibenchmark.core import BenchmarkExecution
 from omnibenchmark.model import SoftwareBackendEnum
 from omnibenchmark.model.benchmark import _is_environment_url
@@ -231,6 +232,10 @@ def prepare_archive_results_local(
     """
     Prepare local results files for archiving (no remote storage required).
 
+    Expected outputs are collected first, then any other file found under
+    `results_dir`, skipping the internal state directories in
+    `INTERNAL_OUT_DIRS` (they hold execution state, not results).
+
     Args:
         benchmark: The benchmark execution object
         results_dir: Directory containing results files
@@ -251,13 +256,16 @@ def prepare_archive_results_local(
 
     # Also include any additional files in the results directory
     results_path = Path(results_dir)
-    if results_path.exists() and results_path.is_dir():
-        additional_files = [
-            f
-            for f in results_path.rglob("*")
-            if f.is_file() and f not in existing_files
-        ]
-        existing_files.extend(additional_files)
+    if results_path.is_dir():
+        seen = set(existing_files)
+        for root, dirs, names in os.walk(results_path):
+            # Prune internal state dirs in place so we neither walk nor archive
+            # them; `.snakemake` alone can hold one metadata file per job.
+            dirs[:] = [d for d in dirs if d not in INTERNAL_OUT_DIRS]
+            for name in names:
+                f = Path(root) / name
+                if f not in seen and f.is_file():
+                    existing_files.append(f)
 
     return existing_files
 
